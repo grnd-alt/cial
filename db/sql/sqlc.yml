@@ -1,0 +1,10 @@
+version: '2'
+sql:
+  - engine: "postgresql"      # Database engine
+    queries: "./queries"      # Directory to store .sql query files
+    schema: "./migrations"    # Directory containing SQL migration files
+    gen:
+      go:
+        package: "dbgen"         # Go package name for generated code
+        out: "dbgen"
+        sql_package: "pgx/v5"

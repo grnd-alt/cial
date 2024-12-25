@@ -1,0 +1,60 @@
+services:
+  db:
+    profiles:
+      - dev
+      - prod
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: testapp
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - app
+  keycloak:
+    profiles:
+      - dev
+    ports:
+      - 8080:8080
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KEYCLOAK_IMPORT=/opt/keycloak/data/import/realm-export.json
+    image: quay.io/keycloak/keycloak:26.0.5
+    command: start-dev --http-host=0.0.0.0 --import-realm
+    volumes:
+      - ./realm.json:/opt/keycloak/data/import/realm-export.json
+    networks:
+      - app
+  app:
+    profiles:
+      - dev
+      - prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=testapp
+      - APP_ENV="development"
+      - APP_PORT=8000
+      - OIDC_ISSUER=https://auth.belakkaf.net/realms/goapp
+      - OIDC_CLIENT_ID=testapplication
+      - JWT_SECRET=secret
+    depends_on:
+      - db
+    networks:
+      - app
+volumes:
+  pg_data:
+networks:
+  app:
+    driver: bridge
