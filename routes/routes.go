@@ -15,6 +15,9 @@ import (
 )
 
 func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Queries) *gin.Engine {
+	if conf.AppEnv == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	engine := gin.New()
 	corsConf := cors.DefaultConfig()
 	corsConf.AddAllowHeaders("Authorization")
