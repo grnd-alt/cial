@@ -19,6 +19,10 @@ type Config struct {
 	OIDCIssuer  string
 	OIDCClientID string
 	JWTSecret   string
+	S3URL       string
+	S3AccessKey string
+	S3SecretKey string
+	S3BucketName string
 }
 
 func LoadConfig() (*Config, error) {
@@ -51,6 +55,10 @@ func LoadConfig() (*Config, error) {
 		OIDCIssuer:  os.Getenv("OIDC_ISSUER"),
 		OIDCClientID: os.Getenv("OIDC_CLIENT_ID"),
 		JWTSecret:   os.Getenv("JWT_SECRET"),
+		S3URL:       os.Getenv("S3_URL"),
+		S3AccessKey: os.Getenv("S3_ACCESS"),
+		S3SecretKey: os.Getenv("S3_SECRET"),
+		S3BucketName: os.Getenv("S3_BUCKET_NAME"),
 	}
 
 	return config, nil

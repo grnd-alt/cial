@@ -38,7 +38,6 @@ func Init(conf *config.Config) *dbgen.Queries {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	err = m.Up()
 	if err != nil {
 		if err.Error() == "no change" {

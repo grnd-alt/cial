@@ -8,11 +8,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Note struct {
-	ID        int32
+type Post struct {
+	ID        string
 	CreatedBy string
+	Username  string
 	Title     string
 	Content   string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
+	Filepath  pgtype.Text
 }
