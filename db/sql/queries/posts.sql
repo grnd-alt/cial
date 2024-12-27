@@ -3,9 +3,9 @@ select * from posts where id = $1;
 
 -- name: CreatePost :one
 INSERT INTO posts(
-    created_by, title, content, username, id, filepath
+    created_by, content, username, id, filepath
 ) VALUES(
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5
 ) RETURNING *;
 
 -- name: GetPostsByUser :many

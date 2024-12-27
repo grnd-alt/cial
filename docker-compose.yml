@@ -30,6 +30,22 @@ services:
       - ./realm.json:/opt/keycloak/data/import/realm-export.json
     networks:
       - app
+  minio:
+    profiles:
+      - dev
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "45199:45199"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      VIRTUAL_PORT: 9000
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data
+    volumes:
+      - minio_data:/data
+    networks:
+      - app
   app:
     profiles:
       - dev
@@ -45,15 +61,15 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=testapp
-      - APP_ENV=production
+      - APP_ENV=development
       - APP_PORT=8000
       - OIDC_ISSUER=https://auth.belakkaf.net/realms/goapp
       - OIDC_CLIENT_ID=testapplication
       - JWT_SECRET=secret
-      - S3_URL=fsn1.your-objectstorage.com
-      - S3_ACCESS=access key
-      - S3_SECRET=secret key
-      - S3_BUCKET_NAME=belakkaf
+      - S3_URL=minio:9000
+      - S3_ACCESS=minioadmin
+      - S3_SECRET=minioadmin
+      - S3_BUCKET_NAME=belakkaf2
     depends_on:
       - db
     networks:
@@ -61,6 +77,7 @@ services:
     restart: unless-stopped
 volumes:
   pg_data:
+  minio_data:
 networks:
   app:
     driver: bridge

@@ -13,15 +13,14 @@ import (
 
 const createPost = `-- name: CreatePost :one
 INSERT INTO posts(
-    created_by, title, content, username, id, filepath
+    created_by, content, username, id, filepath
 ) VALUES(
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, created_by, username, title, content, created_at, updated_at, filepath
+    $1, $2, $3, $4, $5
+) RETURNING id, created_by, username, content, created_at, updated_at, filepath
 `
 
 type CreatePostParams struct {
 	CreatedBy string
-	Title     string
 	Content   string
 	Username  string
 	ID        string
@@ -31,7 +30,6 @@ type CreatePostParams struct {
 func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, error) {
 	row := q.db.QueryRow(ctx, createPost,
 		arg.CreatedBy,
-		arg.Title,
 		arg.Content,
 		arg.Username,
 		arg.ID,
@@ -42,7 +40,6 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 		&i.ID,
 		&i.CreatedBy,
 		&i.Username,
-		&i.Title,
 		&i.Content,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -52,7 +49,7 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 }
 
 const getOne = `-- name: GetOne :one
-select id, created_by, username, title, content, created_at, updated_at, filepath from posts where id = $1
+select id, created_by, username, content, created_at, updated_at, filepath from posts where id = $1
 `
 
 func (q *Queries) GetOne(ctx context.Context, id string) (Post, error) {
@@ -62,7 +59,6 @@ func (q *Queries) GetOne(ctx context.Context, id string) (Post, error) {
 		&i.ID,
 		&i.CreatedBy,
 		&i.Username,
-		&i.Title,
 		&i.Content,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -72,7 +68,7 @@ func (q *Queries) GetOne(ctx context.Context, id string) (Post, error) {
 }
 
 const getPostsByUser = `-- name: GetPostsByUser :many
-SELECT id, created_by, username, title, content, created_at, updated_at, filepath from posts where created_by = $1 order by created_at desc
+SELECT id, created_by, username, content, created_at, updated_at, filepath from posts where created_by = $1 order by created_at desc
 `
 
 func (q *Queries) GetPostsByUser(ctx context.Context, createdBy string) ([]Post, error) {
@@ -88,7 +84,6 @@ func (q *Queries) GetPostsByUser(ctx context.Context, createdBy string) ([]Post,
 			&i.ID,
 			&i.CreatedBy,
 			&i.Username,
-			&i.Title,
 			&i.Content,
 			&i.CreatedAt,
 			&i.UpdatedAt,

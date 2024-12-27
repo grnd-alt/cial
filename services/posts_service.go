@@ -21,7 +21,7 @@ func InitPostsService(queries *dbgen.Queries, fileFileService *FileService) *Pos
 	}
 }
 
-func (n *PostsService) CreatePost(username string, createdBy string, title string, content string, file *multipart.FileHeader) (*dbgen.Post, error) {
+func (n *PostsService) CreatePost(username string, createdBy string, content string, file *multipart.FileHeader) (*dbgen.Post, error) {
 	fileReader, err := file.Open()
 	if err != nil {
 		return nil, err
@@ -34,7 +34,6 @@ func (n *PostsService) CreatePost(username string, createdBy string, title strin
 	post, err := n.query.CreatePost(context.Background(), dbgen.CreatePostParams{
 		ID:        id,
 		CreatedBy: createdBy,
-		Title:     title,
 		Content:   content,
 		Username:  username,
 		Filepath:  pgtype.Text{String: location, Valid: true},

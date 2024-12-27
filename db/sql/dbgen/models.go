@@ -12,7 +12,6 @@ type Post struct {
 	ID        string
 	CreatedBy string
 	Username  string
-	Title     string
 	Content   string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp

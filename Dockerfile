@@ -24,7 +24,7 @@ COPY --from=builder /app/db/sql/migrations /app/db/sql/migrations
 WORKDIR /app
 
 # Expose the port the app runs on.
-EXPOSE 8080
+EXPOSE 8000
 
 # Run the Go app.
 CMD ["/goapp"]

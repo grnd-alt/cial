@@ -18,5 +18,6 @@ func InitOIDC(conf *config.Config) *oidc.Provider {
 		fmt.Println(err)
 		provider, err = oidc.NewProvider(context.Background(), conf.OIDCIssuer)
 	}
+	fmt.Println("returning")
 	return provider
 }

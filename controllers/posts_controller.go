@@ -11,8 +11,7 @@ import (
 )
 
 type CreatePostJSON struct {
-	Title   string `form:"Title"`
-	Content string `form:"Content"`
+	Content string `form:"content" binding:"required"`
 }
 
 type PostsController struct {
@@ -42,7 +41,7 @@ func (n *PostsController) Create(ctx *gin.Context) {
 	}
 
 	var params CreatePostJSON
-	if err := ctx.Bind(&params); err != nil {
+	if err := ctx.ShouldBind(&params); err != nil {
 		response := gin.H{"error": err.Error()}
 		fmt.Println(response)
 		ctx.JSON(http.StatusBadRequest, response)
@@ -57,7 +56,7 @@ func (n *PostsController) Create(ctx *gin.Context) {
 		return
 	}
 
-	post, err := n.PostsService.CreatePost(claims.Username, claims.Sub, params.Title, params.Content, fileHeader)
+	post, err := n.PostsService.CreatePost(claims.Username, claims.Sub, params.Content, fileHeader)
 	if err != nil {
 		response := gin.H{"error": err.Error()}
 		fmt.Println(response)

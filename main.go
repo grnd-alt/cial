@@ -21,10 +21,16 @@ func main() {
 	queries := db.Init(config)
 
 	oidcProvider := services.InitOIDC(config)
+	fmt.Println("hello")
 	verifier:= oidcProvider.Verifier(&oidc.Config{ClientID: config.OIDCClientID})
 
+	fmt.Println("hello")
 
 	engine := routes.Init(verifier, config, queries)
+
+	fmt.Println("hello")
+	fmt.Println(config.AppPort)
+	fmt.Printf("listening on: %s:%d","0.0.0.0", config.AppPort)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", "0.0.0.0", config.AppPort),

@@ -14,10 +14,10 @@ type FileService struct {
 	bucketName  string
 }
 
-func InitFileService(url string, accessKey string, secretKey string, bucketName string) (*FileService, error) {
+func InitFileService(url string, accessKey string, secretKey string, bucketName string, env string) (*FileService, error) {
 	minioClient, err := minio.New(url, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: true,
+		Secure: env == "production",
 	})
 	if err != nil {
 		return nil, err

@@ -23,13 +23,12 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 	corsConf.AddAllowHeaders("Authorization")
 	corsConf.AllowCredentials = true
 	corsConf.AllowAllOrigins = true
-
-	fileService, err := services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName)
+	fileService, err := services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName, conf.AppEnv)
 	for {
 		if err != nil {
-			fmt.Printf("s3 init failed %v", err)
+			fmt.Printf("s3 init failed %v\n", err)
 			time.Sleep(5 * time.Second)
-			fileService, err = services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName)
+			fileService, err = services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName, conf.AppEnv)
 			continue
 		}
 		break

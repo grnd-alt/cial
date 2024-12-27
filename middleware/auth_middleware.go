@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -30,17 +29,17 @@ func getBearer(header string) (string, error) {
 
 func ProtectedMiddleware(verifier *oidc.IDTokenVerifier, mode string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if mode == "development" {
-			fmt.Println("Development mode")
-			var claims Claims
-			claims.Email = "test@test.net"
-			claims.Username = "test"
-			claims.Sub = "test"
-			claims.Expiry = 0
-			ctx.Set("claims", claims)
-			ctx.Next()
-			return
-		}
+		// if mode == "development" {
+		// 	fmt.Println("Development mode")
+		// 	var claims Claims
+		// 	claims.Email = "test@test.net"
+		// 	claims.Username = "test"
+		// 	claims.Sub = "test"
+		// 	claims.Expiry = 0
+		// 	ctx.Set("claims", claims)
+		// 	ctx.Next()
+		// 	return
+		// }
 		bearer, err := getBearer(ctx.GetHeader("Authorization"))
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
