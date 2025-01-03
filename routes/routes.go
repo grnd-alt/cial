@@ -34,9 +34,11 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 		break
 	}
 	postService := services.InitPostsService(queries, fileService)
+	commentsService := services.InitCommentsService(queries)
 
 	userController := controllers.InitUserController(conf, verifier)
 	postsController := controllers.InitPostsController(conf, postService)
+	commentsController := controllers.InitCommentsController(commentsService)
 
 	engine.Use(cors.New(corsConf))
 	engine.Use(gin.Logger())
@@ -45,9 +47,10 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 
 	engine.Use(middleware.ProtectedMiddleware(verifier, conf.AppEnv))
 	{
+		engine.POST("/api/comments/create", commentsController.CreateComment)
 		engine.GET("/api/me", userController.Me)
 		engine.POST("/api/posts/create", postsController.Create)
-		engine.GET("/api/posts", postsController.GetPostsByUser)
+		engine.GET("/api/posts/:username", postsController.GetPostsByUser)
 	}
 	return engine
 }

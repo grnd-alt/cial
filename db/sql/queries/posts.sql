@@ -1,5 +1,5 @@
 -- name: GetOne :one
-select * from posts where id = $1;
+select * from posts JOIN comments on posts.id = comments.post_id where posts.id = $1 ;
 
 -- name: CreatePost :one
 INSERT INTO posts(
@@ -9,4 +9,4 @@ INSERT INTO posts(
 ) RETURNING *;
 
 -- name: GetPostsByUser :many
-SELECT * from posts where created_by = $1 order by created_at desc;
+SELECT * FROM posts WHERE created_by = $1 OR username = $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4;

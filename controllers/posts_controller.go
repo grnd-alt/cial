@@ -6,6 +6,7 @@ import (
 	"backendsetup/m/services"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -77,7 +78,14 @@ func (n *PostsController) GetPostsByUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
 		return
 	}
-	posts, err := n.PostsService.GetPosts(claims.Sub)
+
+	username := ctx.Param("username")
+	pageStr := ctx.Query("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 0 {
+		page = 0
+	}
+	posts, err := n.PostsService.GetPosts(claims.Sub, page, username)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

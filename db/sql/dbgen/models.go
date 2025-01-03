@@ -8,6 +8,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Comment struct {
+	ID        string
+	PostID    string
+	UserID    string
+	Content   string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
+}
+
 type Post struct {
 	ID        string
 	CreatedBy string
