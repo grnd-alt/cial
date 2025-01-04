@@ -67,11 +67,11 @@ func (n *PostsService) GetPosts(createdBy string, page int, username string) ([]
 	for _, comment := range comments {
 		commentsMap[comment.PostID] = append(commentsMap[comment.PostID], &comment)
 	}
-	var postsWithComments []PostWithComments
+	postsWithComments := make([]PostWithComments, len(posts))
 
 	var mut sync.Mutex
 	var wg sync.WaitGroup
-	for _, post := range posts {
+	for i, post := range posts {
 		post := post
 		wg.Add(1)
 		go func(post dbgen.Post) {
@@ -82,10 +82,10 @@ func (n *PostsService) GetPosts(createdBy string, page int, username string) ([]
 			}
 			post.Filepath = pgtype.Text{String: filepath, Valid: true}
 			mut.Lock()
-			postsWithComments = append(postsWithComments, PostWithComments{
+			postsWithComments[i] = PostWithComments{
 				Post:     &post,
 				Comments: commentsMap[post.ID],
-			})
+			}
 			mut.Unlock()
 		}(post)
 	}
