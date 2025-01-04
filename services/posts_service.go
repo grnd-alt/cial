@@ -50,11 +50,7 @@ type PostWithComments struct {
 	Comments []*dbgen.GetCommentsByPostsRow
 }
 
-func (n *PostsService) GetPosts(createdBy string, page int, username string) ([]PostWithComments, error) {
-	posts, err := n.query.GetPostsByUser(context.Background(), dbgen.GetPostsByUserParams{Username: username, Limit: 10, Offset: int32(page * 10)})
-	if err != nil {
-		return nil, err
-	}
+func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments,error) {
 	ids := make([]string, len(posts))
 	for i, post := range posts {
 		ids[i] = post.ID
@@ -90,5 +86,23 @@ func (n *PostsService) GetPosts(createdBy string, page int, username string) ([]
 		}(post)
 	}
 	wg.Wait()
-	return postsWithComments, nil
+	return postsWithComments,nil
+}
+
+
+func (n *PostsService) GetFeed(offset int32) ([]PostWithComments, error) {
+	posts, err := n.query.GetLatestPosts(context.Background(), dbgen.GetLatestPostsParams{Limit: 10, Offset: offset})
+	if err != nil {
+		return nil, err
+	}
+	return n.populatePosts(posts)
+}
+
+func (n *PostsService) GetPosts(createdBy string, page int, username string) ([]PostWithComments, error) {
+	posts, err := n.query.GetPostsByUser(context.Background(), dbgen.GetPostsByUserParams{Username: username, Limit: 10, Offset: int32(page * 10)})
+	if err != nil {
+		return nil, err
+	}
+
+	return n.populatePosts(posts)
 }

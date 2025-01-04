@@ -67,6 +67,19 @@ func (n *PostsController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, post)
 }
 
+func (n *PostsController) GetLatest(ctx *gin.Context){
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil || page < 0 {
+		page = 0
+	}
+	posts, err := n.PostsService.GetFeed(int32(page))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, posts)
+}
+
 func (n *PostsController) GetPostsByUser(ctx *gin.Context) {
 	claimsInterface, exists := ctx.Get("claims")
 	if !exists {

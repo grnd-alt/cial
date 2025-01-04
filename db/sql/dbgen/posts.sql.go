@@ -48,6 +48,43 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 	return i, err
 }
 
+const getLatestPosts = `-- name: GetLatestPosts :many
+SELECT id, created_by, username, content, created_at, updated_at, filepath FROM posts ORDER BY created_at DESC LIMIT $1 OFFSET $2
+`
+
+type GetLatestPostsParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetLatestPosts(ctx context.Context, arg GetLatestPostsParams) ([]Post, error) {
+	rows, err := q.db.Query(ctx, getLatestPosts, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedBy,
+			&i.Username,
+			&i.Content,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Filepath,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOne = `-- name: GetOne :one
 select posts.id, created_by, username, posts.content, posts.created_at, posts.updated_at, filepath, comments.id, post_id, user_id, comments.content, comments.created_at, comments.updated_at from posts JOIN comments on posts.id = comments.post_id where posts.id = $1
 `
