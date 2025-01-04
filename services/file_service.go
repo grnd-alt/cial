@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -52,4 +53,12 @@ func (f *FileService) UploadFile(objectName string, file io.Reader, fileSize int
 		return "", err
 	}
 	return fmt.Sprintf("%s/%s/%s", f.minioClient.EndpointURL(), f.bucketName,objectName), nil
+}
+
+func (f *FileService) GetFileUrl(objectName string) (string, error) {
+	url, err := f.minioClient.PresignedGetObject(context.Background(),f.bucketName,objectName, time.Duration(1000) * time.Second, nil)
+	if err != nil {
+		return "", err
+	}
+	return url.String(),nil
 }

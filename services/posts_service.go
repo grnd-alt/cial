@@ -4,6 +4,7 @@ import (
 	"backendsetup/m/db/sql/dbgen"
 	"context"
 	"mime/multipart"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -67,11 +68,27 @@ func (n *PostsService) GetPosts(createdBy string, page int, username string) ([]
 		commentsMap[comment.PostID] = append(commentsMap[comment.PostID], &comment)
 	}
 	var postsWithComments []PostWithComments
+
+	var mut sync.Mutex
+	var wg sync.WaitGroup
 	for _, post := range posts {
-		postsWithComments = append(postsWithComments, PostWithComments{
-			Post:     &post,
-			Comments: commentsMap[post.ID],
-		})
+		post := post
+		wg.Add(1)
+		go func(post dbgen.Post) {
+			defer wg.Done()
+			filepath, err := n.fileService.GetFileUrl(post.ID)
+			if err != nil {
+				return
+			}
+			post.Filepath = pgtype.Text{String: filepath, Valid: true}
+			mut.Lock()
+			postsWithComments = append(postsWithComments, PostWithComments{
+				Post:     &post,
+				Comments: commentsMap[post.ID],
+			})
+			mut.Unlock()
+		}(post)
 	}
+	wg.Wait()
 	return postsWithComments, nil
 }
