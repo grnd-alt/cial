@@ -91,7 +91,7 @@ func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments,err
 
 
 func (n *PostsService) GetFeed(offset int32) ([]PostWithComments, error) {
-	posts, err := n.query.GetLatestPosts(context.Background(), dbgen.GetLatestPostsParams{Limit: 10, Offset: offset})
+	posts, err := n.query.GetLatestPosts(context.Background(), dbgen.GetLatestPostsParams{Limit: 10, Offset: offset * 10})
 	if err != nil {
 		return nil, err
 	}
