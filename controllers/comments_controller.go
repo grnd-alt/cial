@@ -3,7 +3,6 @@ package controllers
 import (
 	"backendsetup/m/middleware"
 	"backendsetup/m/services"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

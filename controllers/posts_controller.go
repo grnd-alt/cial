@@ -4,7 +4,6 @@ import (
 	"backendsetup/m/config"
 	"backendsetup/m/middleware"
 	"backendsetup/m/services"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -62,7 +61,7 @@ func (n *PostsController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, post)
 }
 
-func (n *PostsController) GetLatest(ctx *gin.Context){
+func (n *PostsController) GetLatest(ctx *gin.Context) {
 	page, err := strconv.Atoi(ctx.Query("page"))
 	if err != nil || page < 0 {
 		page = 0
@@ -122,7 +121,6 @@ func (n *PostsController) Delete(ctx *gin.Context) {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
-
 
 	err = n.PostsService.DeletePost(postId)
 	if err != nil {
