@@ -34,7 +34,7 @@ func (n *PostsService) GetPost(postId string) (*PostWithComments, error) {
 	return &fullpost[0], nil
 }
 
-func (n *PostsService) CreatePost(username string, createdBy string, content string, file *multipart.FileHeader) (*dbgen.Post, error) {
+func (n *PostsService) CreatePost(username string, createdBy string, content string, file *multipart.FileHeader) (*PostWithComments, error) {
 	fileReader, err := file.Open()
 	if err != nil {
 		return nil, err
@@ -54,7 +54,12 @@ func (n *PostsService) CreatePost(username string, createdBy string, content str
 	if err != nil {
 		return nil, err
 	}
-	return &post, err
+
+	posts, err := n.populatePosts([]dbgen.Post{post})
+	if err != nil {
+		return nil,err
+	}
+	return &posts[0], err
 }
 
 func (n *PostsService) DeletePost(postId string) error {
