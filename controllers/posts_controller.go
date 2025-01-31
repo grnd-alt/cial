@@ -29,14 +29,12 @@ func (n *PostsController) Create(ctx *gin.Context) {
 	claimsInterface, exists := ctx.Get("claims")
 	if !exists {
 		response := gin.H{"error": "claims not found"}
-		fmt.Println(response)
 		ctx.JSON(http.StatusUnauthorized, response)
 		return
 	}
 	claims, ok := claimsInterface.(middleware.Claims)
 	if !ok {
 		response := gin.H{"error": "invalid claims"}
-		fmt.Println(response)
 		ctx.JSON(http.StatusUnauthorized, response)
 		return
 	}
@@ -44,7 +42,6 @@ func (n *PostsController) Create(ctx *gin.Context) {
 	var params CreatePostJSON
 	if err := ctx.ShouldBind(&params); err != nil {
 		response := gin.H{"error": err.Error()}
-		fmt.Println(response)
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -52,7 +49,6 @@ func (n *PostsController) Create(ctx *gin.Context) {
 	fileHeader, err := ctx.FormFile("file")
 	if err != nil {
 		response := gin.H{"error": err.Error()}
-		fmt.Println(response)
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
@@ -60,7 +56,6 @@ func (n *PostsController) Create(ctx *gin.Context) {
 	post, err := n.PostsService.CreatePost(claims.Username, claims.Sub, params.Content, fileHeader)
 	if err != nil {
 		response := gin.H{"error": err.Error()}
-		fmt.Println(response)
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
@@ -104,4 +99,34 @@ func (n *PostsController) GetPostsByUser(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, posts)
+}
+
+func (n *PostsController) Delete(ctx *gin.Context) {
+	claimsInterface, exists := ctx.Get("claims")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "claims not found"})
+		return
+	}
+	claims, ok := claimsInterface.(middleware.Claims)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
+		return
+	}
+	postId := ctx.Param("postId")
+	post, err := n.PostsService.GetPost(postId)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	if post.Post.CreatedBy != claims.Sub {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+
+	err = n.PostsService.DeletePost(postId)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err)
+		return
+	}
 }

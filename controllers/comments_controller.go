@@ -23,14 +23,12 @@ func (c *CommentsController) CreateComment(ctx *gin.Context) {
 	claimsInterface, exists := ctx.Get("claims")
 	if !exists {
 		response := gin.H{"error": "claims not found"}
-		fmt.Println(response)
 		ctx.JSON(http.StatusUnauthorized, response)
 		return
 	}
 	claims, ok := claimsInterface.(middleware.Claims)
 	if !ok {
 		response := gin.H{"error": "invalid claims"}
-		fmt.Println(response)
 		ctx.JSON(http.StatusUnauthorized, response)
 		return
 	}
@@ -41,14 +39,12 @@ func (c *CommentsController) CreateComment(ctx *gin.Context) {
 	}
 	if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 		response := gin.H{"error": "invalid request body"}
-		fmt.Println(response)
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
 	comment,err := c.CommentsService.CreateComment(claims.Sub, requestBody.Content, requestBody.PostID)
 	if err != nil {
 		response := gin.H{"error": err.Error()}
-		fmt.Println(response)
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}

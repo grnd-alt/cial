@@ -10,7 +10,6 @@ import (
 )
 
 func InitOIDC(conf *config.Config) *oidc.Provider {
-	fmt.Println(conf.OIDCIssuer)
 	provider,err := oidc.NewProvider(context.Background(), conf.OIDCIssuer)
 	for err != nil {
 		time.Sleep(5 * time.Second)
@@ -18,6 +17,5 @@ func InitOIDC(conf *config.Config) *oidc.Provider {
 		fmt.Println(err)
 		provider, err = oidc.NewProvider(context.Background(), conf.OIDCIssuer)
 	}
-	fmt.Println("returning")
 	return provider
 }

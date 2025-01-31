@@ -48,6 +48,15 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 	return i, err
 }
 
+const deletePost = `-- name: DeletePost :exec
+DELETE FROM posts WHERE id = $1
+`
+
+func (q *Queries) DeletePost(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, deletePost, id)
+	return err
+}
+
 const getLatestPosts = `-- name: GetLatestPosts :many
 SELECT id, created_by, username, content, created_at, updated_at, filepath FROM posts ORDER BY created_at DESC LIMIT $1 OFFSET $2
 `
@@ -86,28 +95,12 @@ func (q *Queries) GetLatestPosts(ctx context.Context, arg GetLatestPostsParams) 
 }
 
 const getOne = `-- name: GetOne :one
-select posts.id, created_by, username, posts.content, posts.created_at, posts.updated_at, filepath, comments.id, post_id, user_id, comments.content, comments.created_at, comments.updated_at from posts JOIN comments on posts.id = comments.post_id where posts.id = $1
+select id, created_by, username, content, created_at, updated_at, filepath from posts where posts.id = $1
 `
 
-type GetOneRow struct {
-	ID          string
-	CreatedBy   string
-	Username    string
-	Content     string
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
-	Filepath    pgtype.Text
-	ID_2        string
-	PostID      string
-	UserID      string
-	Content_2   string
-	CreatedAt_2 pgtype.Timestamp
-	UpdatedAt_2 pgtype.Timestamp
-}
-
-func (q *Queries) GetOne(ctx context.Context, id string) (GetOneRow, error) {
+func (q *Queries) GetOne(ctx context.Context, id string) (Post, error) {
 	row := q.db.QueryRow(ctx, getOne, id)
-	var i GetOneRow
+	var i Post
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedBy,
@@ -116,12 +109,6 @@ func (q *Queries) GetOne(ctx context.Context, id string) (GetOneRow, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Filepath,
-		&i.ID_2,
-		&i.PostID,
-		&i.UserID,
-		&i.Content_2,
-		&i.CreatedAt_2,
-		&i.UpdatedAt_2,
 	)
 	return i, err
 }

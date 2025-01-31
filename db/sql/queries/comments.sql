@@ -18,3 +18,6 @@ WITH RankedComments AS (
     WHERE post_id = ANY($1::varchar[])
 )
 select * from RankedComments where rn <= 10;
+
+-- name: DeleteCommentsByPost :exec
+DELETE FROM COMMENTS WHERE post_id = $1;

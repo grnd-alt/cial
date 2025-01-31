@@ -29,6 +29,14 @@ func getBearer(header string) (string, error) {
 
 func ProtectedMiddleware(verifier *oidc.IDTokenVerifier, mode string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// if mode == "development" {
+		// 	ctx.Set("claims", Claims{
+		// 		Sub:      "test",
+		// 		Username: "test",
+		// 		Email:    "test@test.com",
+		// 	})
+		// 	return
+		// }
 		bearer, err := getBearer(ctx.GetHeader("Authorization"))
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})

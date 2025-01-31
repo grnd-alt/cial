@@ -1,5 +1,5 @@
 -- name: GetOne :one
-select * from posts JOIN comments on posts.id = comments.post_id where posts.id = $1 ;
+select * from posts where posts.id = $1 ;
 
 -- name: CreatePost :one
 INSERT INTO posts(
@@ -13,3 +13,7 @@ SELECT * FROM posts WHERE created_by = $1 OR username = $2 ORDER BY created_at D
 
 -- name: GetLatestPosts :many
 SELECT * FROM posts ORDER BY created_at DESC LIMIT $1 OFFSET $2;
+
+
+-- name: DeletePost :exec
+DELETE FROM posts WHERE id = $1;

@@ -22,6 +22,18 @@ func InitPostsService(queries *dbgen.Queries, fileFileService *FileService) *Pos
 	}
 }
 
+func (n *PostsService) GetPost(postId string) (*PostWithComments, error) {
+	post, err := n.query.GetOne(context.Background(), postId)
+	if err != nil {
+		return nil, err
+	}
+	fullpost,err := n.populatePosts([]dbgen.Post{post})
+	if err != nil {
+		return nil, err
+	}
+	return &fullpost[0], nil
+}
+
 func (n *PostsService) CreatePost(username string, createdBy string, content string, file *multipart.FileHeader) (*dbgen.Post, error) {
 	fileReader, err := file.Open()
 	if err != nil {
@@ -43,6 +55,14 @@ func (n *PostsService) CreatePost(username string, createdBy string, content str
 		return nil, err
 	}
 	return &post, err
+}
+
+func (n *PostsService) DeletePost(postId string) error {
+	err := n.query.DeletePost(context.Background(), postId)
+	if err != nil {
+		return err
+	}
+	return n.query.DeleteCommentsByPost(context.Background(), postId)
 }
 
 type PostWithComments struct {
