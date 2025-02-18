@@ -17,12 +17,13 @@ func InitCommentsService(queries *dbgen.Queries) *CommentsService {
 	}
 }
 
-func (c *CommentsService) CreateComment(userId string, content string, postID string) (*dbgen.Comment, error) {
+func (c *CommentsService) CreateComment(userId string, username string,content string, postID string) (*dbgen.Comment, error) {
 	comment, err := c.Queries.CreateComment(context.Background(), dbgen.CreateCommentParams{
 		ID: uuid.NewString(),
 		UserID: userId,
 		Content:   content,
 		PostID:    postID,
+		UserName:  username,
 	})
 	return &comment, err
 }

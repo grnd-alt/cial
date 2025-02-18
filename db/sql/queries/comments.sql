@@ -1,9 +1,9 @@
 
 -- name: CreateComment :one
 INSERT INTO COMMENTS(
-    id, post_id, user_id, content
+    id, post_id, user_id, content, user_name
 ) VALUES(
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 ) RETURNING *;
 
 -- name: GetCommentsByPost :many

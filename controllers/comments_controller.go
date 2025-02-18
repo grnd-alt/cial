@@ -41,7 +41,7 @@ func (c *CommentsController) CreateComment(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
-	comment,err := c.CommentsService.CreateComment(claims.Sub, requestBody.Content, requestBody.PostID)
+	comment,err := c.CommentsService.CreateComment(claims.Sub, claims.Username, requestBody.Content, requestBody.PostID)
 	if err != nil {
 		response := gin.H{"error": err.Error()}
 		ctx.JSON(http.StatusInternalServerError, response)

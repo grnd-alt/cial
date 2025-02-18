@@ -13,17 +13,18 @@ import (
 
 const createComment = `-- name: CreateComment :one
 INSERT INTO COMMENTS(
-    id, post_id, user_id, content
+    id, post_id, user_id, content, user_name
 ) VALUES(
-    $1, $2, $3, $4
-) RETURNING id, post_id, user_id, content, created_at, updated_at
+    $1, $2, $3, $4, $5
+) RETURNING id, post_id, user_id, content, created_at, updated_at, user_name
 `
 
 type CreateCommentParams struct {
-	ID      string
-	PostID  string
-	UserID  string
-	Content string
+	ID       string
+	PostID   string
+	UserID   string
+	Content  string
+	UserName string
 }
 
 func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (Comment, error) {
@@ -32,6 +33,7 @@ func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (C
 		arg.PostID,
 		arg.UserID,
 		arg.Content,
+		arg.UserName,
 	)
 	var i Comment
 	err := row.Scan(
@@ -41,6 +43,7 @@ func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (C
 		&i.Content,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserName,
 	)
 	return i, err
 }
@@ -55,7 +58,7 @@ func (q *Queries) DeleteCommentsByPost(ctx context.Context, postID string) error
 }
 
 const getCommentsByPost = `-- name: GetCommentsByPost :many
-select id, post_id, user_id, content, created_at, updated_at from comments where post_id = $1
+select id, post_id, user_id, content, created_at, updated_at, user_name from comments where post_id = $1
 `
 
 func (q *Queries) GetCommentsByPost(ctx context.Context, postID string) ([]Comment, error) {
@@ -74,6 +77,7 @@ func (q *Queries) GetCommentsByPost(ctx context.Context, postID string) ([]Comme
 			&i.Content,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UserName,
 		); err != nil {
 			return nil, err
 		}
@@ -88,12 +92,12 @@ func (q *Queries) GetCommentsByPost(ctx context.Context, postID string) ([]Comme
 const getCommentsByPosts = `-- name: GetCommentsByPosts :many
 WITH RankedComments AS (
     SELECT
-        id, post_id, user_id, content, created_at, updated_at,
+        id, post_id, user_id, content, created_at, updated_at, user_name,
         ROW_NUMBER() OVER (PARTITION BY post_id ORDER BY created_at DESC) AS rn
     FROM comments
     WHERE post_id = ANY($1::varchar[])
 )
-select id, post_id, user_id, content, created_at, updated_at, rn from RankedComments where rn <= 10
+select id, post_id, user_id, content, created_at, updated_at, user_name, rn from RankedComments where rn <= 10
 `
 
 type GetCommentsByPostsRow struct {
@@ -103,6 +107,7 @@ type GetCommentsByPostsRow struct {
 	Content   string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
+	UserName  string
 	Rn        int64
 }
 
@@ -122,6 +127,7 @@ func (q *Queries) GetCommentsByPosts(ctx context.Context, dollar_1 []string) ([]
 			&i.Content,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.UserName,
 			&i.Rn,
 		); err != nil {
 			return nil, err

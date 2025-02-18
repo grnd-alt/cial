@@ -15,6 +15,7 @@ type Comment struct {
 	Content   string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
+	UserName  string
 }
 
 type Post struct {
