@@ -3,6 +3,7 @@ package services
 import (
 	"backendsetup/m/db/sql/dbgen"
 	"context"
+	"fmt"
 	"mime/multipart"
 	"sync"
 
@@ -11,14 +12,16 @@ import (
 )
 
 type PostsService struct {
-	query       *dbgen.Queries
-	fileService *FileService
+	query               *dbgen.Queries
+	fileService         *FileService
+	notificationService *NotificationService
 }
 
-func InitPostsService(queries *dbgen.Queries, fileFileService *FileService) *PostsService {
+func InitPostsService(queries *dbgen.Queries, fileService *FileService, notificationService *NotificationService) *PostsService {
 	return &PostsService{
-		query:       queries,
-		fileService: fileFileService,
+		query:               queries,
+		fileService:         fileService,
+		notificationService: notificationService,
 	}
 }
 
@@ -27,7 +30,7 @@ func (n *PostsService) GetPost(postId string) (*PostWithComments, error) {
 	if err != nil {
 		return nil, err
 	}
-	fullpost,err := n.populatePosts([]dbgen.Post{post})
+	fullpost, err := n.populatePosts([]dbgen.Post{post})
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +60,9 @@ func (n *PostsService) CreatePost(username string, createdBy string, content str
 
 	posts, err := n.populatePosts([]dbgen.Post{post})
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
+	go n.notificationService.SendFollowersNotification(fmt.Sprintf("New Post by %s ", username), createdBy)
 	return &posts[0], err
 }
 
@@ -75,7 +79,7 @@ type PostWithComments struct {
 	Comments []*dbgen.GetCommentsByPostsRow
 }
 
-func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments,error) {
+func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments, error) {
 	ids := make([]string, len(posts))
 	for i, post := range posts {
 		ids[i] = post.ID
@@ -111,9 +115,8 @@ func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments,err
 		}(post)
 	}
 	wg.Wait()
-	return postsWithComments,nil
+	return postsWithComments, nil
 }
-
 
 func (n *PostsService) GetFeed(offset int32) ([]PostWithComments, error) {
 	posts, err := n.query.GetLatestPosts(context.Background(), dbgen.GetLatestPostsParams{Limit: 10, Offset: offset * 10})

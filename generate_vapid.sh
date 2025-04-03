@@ -1,0 +1,1 @@
+docker run --rm node:18-alpine sh -c "npm install -g web-push >/dev/null 2>&1 && web-push generate-vapid-keys --json" | tee vapid_keys.json
