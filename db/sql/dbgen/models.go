@@ -27,3 +27,22 @@ type Post struct {
 	UpdatedAt pgtype.Timestamp
 	Filepath  pgtype.Text
 }
+
+type User struct {
+	ID       int32
+	UserID   string
+	Username string
+}
+
+type UserFollow struct {
+	FollowerID       string
+	FollowedID       string
+	NotificationType pgtype.Text
+	FollowedAt       pgtype.Timestamp
+}
+
+type UserSubscription struct {
+	UserID       string
+	Subscription []byte
+	CreatedAt    pgtype.Timestamptz
+}

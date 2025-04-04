@@ -33,26 +33,40 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 		}
 		break
 	}
-	postService := services.InitPostsService(queries, fileService)
+
+	notificationService := services.InitNotificationServe(conf, queries)
+	followService := services.InitFollowService(queries)
+	userService := services.InitUserService(queries)
+	postService := services.InitPostsService(queries, fileService, notificationService)
 	commentsService := services.InitCommentsService(queries)
 
-	userController := controllers.InitUserController(conf, verifier)
+	userController := controllers.InitUserController(conf, verifier, followService, userService)
 	postsController := controllers.InitPostsController(conf, postService)
 	commentsController := controllers.InitCommentsController(commentsService)
+	vapidController := controllers.InitVapidController(conf.VAPIDPub)
 
 	engine.Use(cors.New(corsConf))
 	engine.Use(gin.Logger())
 
 	engine.GET("/api/hello", controllers.HelloWorldHandler)
+	engine.GET("/api/vapid", vapidController.GetPublicKey)
 
 	engine.Use(middleware.ProtectedMiddleware(verifier, conf.AppEnv))
 	{
-		engine.POST("/api/comments/create", commentsController.CreateComment)
-		engine.GET("/api/me", userController.Me)
+
+		// posts
 		engine.POST("/api/posts/create", postsController.Create)
 		engine.DELETE("/api/posts/:postId", postsController.Delete)
 		engine.GET("/api/posts", postsController.GetLatest)
 		engine.GET("/api/posts/:username", postsController.GetPostsByUser)
+		engine.POST("/api/comments/create", commentsController.CreateComment)
+
+		// users
+		engine.GET("/api/me", userController.Me)
+		engine.GET("/api/users/:username", userController.GetUser)
+		engine.GET("/api/users/:username/followers", userController.GetFollowers)
+		engine.POST("/api/users/update-browser-data", userController.UpdateBrowserData)
+		engine.POST("/api/users/follow/:username", userController.Follow)
 	}
 	return engine
 }
