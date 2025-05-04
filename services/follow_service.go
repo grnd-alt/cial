@@ -47,7 +47,7 @@ func (f *FollowService) GetFollowers(username string) ([]dbgen.UserFollow, error
 	if err != nil {
 		return nil, err
 	}
-	res, err := f.queries.GetFollowers(context.Background(), dbgen.GetFollowersParams{FollowedID: user.UserID})
+	res, err := f.queries.GetFollowers(context.Background(), dbgen.GetFollowersParams{FollowedID: user.UserID, Offset: 0, Limit: 10})
 	if err != nil {
 		return nil, err
 	}

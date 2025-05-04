@@ -11,6 +11,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteSubscription = `-- name: DeleteSubscription :exec
+DELETE FROM user_subscriptions
+WHERE user_id = $1 AND subscription = $2
+`
+
+type DeleteSubscriptionParams struct {
+	UserID       string
+	Subscription []byte
+}
+
+func (q *Queries) DeleteSubscription(ctx context.Context, arg DeleteSubscriptionParams) error {
+	_, err := q.db.Exec(ctx, deleteSubscription, arg.UserID, arg.Subscription)
+	return err
+}
+
 const getAllFollowers = `-- name: GetAllFollowers :many
 SELECT follower_id, followed_id, notification_type, followed_at
 FROM user_follows
@@ -217,7 +232,7 @@ func (q *Queries) InsertFollower(ctx context.Context, arg InsertFollowerParams) 
 
 const insertSubscription = `-- name: InsertSubscription :exec
 INSERT INTO user_subscriptions (user_id, subscription)
-VALUES ($1, $2) ON CONFLICT (user_id, subscription) DO NOTHING
+VALUES ($1, $2) ON CONFLICT (subscription) DO UPDATE SET user_id=$1
 `
 
 type InsertSubscriptionParams struct {

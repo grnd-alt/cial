@@ -44,6 +44,13 @@ func (n *NotificationService) SendNotification(message string, userId string) er
 		})
 		if err != nil {
 			fmt.Println(err)
+			if err.Error() == "410 Gone" {
+				if err := n.queries.DeleteSubscription(context.Background(), dbgen.DeleteSubscriptionParams{UserID: userId, Subscription: subscription}); err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
 		}
 		fmt.Println(resp)
 	}

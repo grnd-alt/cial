@@ -1,22 +1,23 @@
 package db
 
 import (
-	"backendsetup/m/config"
 	"backendsetup/m/db/sql/dbgen"
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Init(conf *config.Config) *dbgen.Queries {
+func Init(username string, password string, host string, port int, dbname string) *dbgen.Queries {
 	ctx := context.Background()
-	pgString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", conf.DBUser, conf.DBPass, conf.DBHost, conf.DBPort, conf.DBName)
+	pgString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", username, password, host, port, dbname)
 	var conn *pgxpool.Pool
 	var err error
 	for {
@@ -33,8 +34,13 @@ func Init(conf *config.Config) *dbgen.Queries {
 		}
 		break
 	}
+	basePath, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	migrationPath := fmt.Sprintf("file://%s", filepath.Join(basePath, "db/sql/migrations/"))
 
-	m, err := migrate.New("file://db/sql/migrations/", pgString)
+	m, err := migrate.New(migrationPath, pgString)
 	if err != nil {
 		log.Fatal(err)
 	}
