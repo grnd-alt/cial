@@ -11,6 +11,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const deleteFollower = `-- name: DeleteFollower :exec
+DELETE FROM user_follows
+WHERE follower_id = $1 AND followed_id = $2
+`
+
+type DeleteFollowerParams struct {
+	FollowerID string
+	FollowedID string
+}
+
+func (q *Queries) DeleteFollower(ctx context.Context, arg DeleteFollowerParams) error {
+	_, err := q.db.Exec(ctx, deleteFollower, arg.FollowerID, arg.FollowedID)
+	return err
+}
+
 const deleteSubscription = `-- name: DeleteSubscription :exec
 DELETE FROM user_subscriptions
 WHERE user_id = $1 AND subscription = $2
@@ -243,4 +258,24 @@ type InsertSubscriptionParams struct {
 func (q *Queries) InsertSubscription(ctx context.Context, arg InsertSubscriptionParams) error {
 	_, err := q.db.Exec(ctx, insertSubscription, arg.UserID, arg.Subscription)
 	return err
+}
+
+const isFollowing = `-- name: IsFollowing :one
+SELECT EXISTS (
+    SELECT 1
+    FROM user_follows
+    WHERE follower_id = $1 AND followed_id = $2
+)
+`
+
+type IsFollowingParams struct {
+	FollowerID string
+	FollowedID string
+}
+
+func (q *Queries) IsFollowing(ctx context.Context, arg IsFollowingParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isFollowing, arg.FollowerID, arg.FollowedID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }

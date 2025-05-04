@@ -67,6 +67,7 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 		engine.GET("/api/users/:username/followers", userController.GetFollowers)
 		engine.POST("/api/users/update-browser-data", userController.UpdateBrowserData)
 		engine.POST("/api/users/follow/:username", userController.Follow)
+		engine.POST("/api/users/unfollow/:username", userController.Unfollow)
 	}
 	return engine
 }

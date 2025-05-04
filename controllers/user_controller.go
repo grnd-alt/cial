@@ -69,11 +69,34 @@ func (u UserController) Follow(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "Followed"})
 }
 
+func (u UserController) Unfollow(ctx *gin.Context) {
+	claims, exists := ctx.Get("claims")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
+		return
+	}
+	username := claims.(middleware.Claims).Username
+	followingname := ctx.Param("username")
+	err := u.followService.Unfollow(username, followingname)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "Unfollowed"})
+}
+
 func (u UserController) GetUser(ctx *gin.Context) {
+	claims, exists := ctx.Get("claims")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
+		return
+	}
 	type userdata = struct {
-		Following int64  `json:"following"`
-		Followers int64  `json:"followers"`
-		Username  string `json:"username"`
+		FollowingCount int64 `json:"followingcount"`
+		Followers      int64 `json:"followers"`
+		IsFollowing    bool  `json:"isfollowing"`
+
+		Username string `json:"username"`
 	}
 	username := ctx.Param("username")
 	followingCount, err := u.followService.GetFollowingCount(username)
@@ -87,7 +110,10 @@ func (u UserController) GetUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, userdata{Followers: followerCount, Following: followingCount, Username: username})
+
+	isfollowing := u.followService.IsFollowing(claims.(middleware.Claims).Username, ctx.Param("username"))
+
+	ctx.JSON(http.StatusOK, userdata{Followers: followerCount, FollowingCount: followingCount, Username: username, IsFollowing: isfollowing})
 }
 
 func (u UserController) GetFollowers(ctx *gin.Context) {
