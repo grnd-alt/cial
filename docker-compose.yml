@@ -50,9 +50,7 @@ services:
     profiles:
       - dev
       - prod
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/grnd-alt/cial:main
     ports:
       - "8000:8000"
     environment:
@@ -63,7 +61,7 @@ services:
       - DB_NAME=testapp
       - APP_ENV=development
       - APP_PORT=8000
-      - OIDC_ISSUER=https://auth.belakkaf.net/realms/goapp
+      - OIDC_ISSUER=http://keycloak:8080/realms/goapp
       - OIDC_CLIENT_ID=testapplication
       - JWT_SECRET=secret
       - S3_URL=minio:9000

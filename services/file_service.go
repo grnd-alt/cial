@@ -47,7 +47,7 @@ func (f *FileService) UploadFile(objectName string, file io.Reader, fileSize int
 		objectName,
 		file,
 		fileSize,
-		minio.PutObjectOptions{ContentType: mimeType},
+		minio.PutObjectOptions{ContentType: mimeType, CacheControl: "private, max-age=31536000"},
 	)
 	if err != nil {
 		return "", err
