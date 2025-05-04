@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("Error loading config: %v", err)
 	}
 
-	queries := db.Init(config)
+	queries := db.Init(config.DBUser, config.DBPass, config.DBHost, config.DBPort, config.DBName)
 
 	oidcProvider := services.InitOIDC(config)
 	verifier := oidcProvider.Verifier(&oidc.Config{ClientID: config.OIDCClientID})

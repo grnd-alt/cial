@@ -37,7 +37,11 @@ VALUES ($1, $2, $3) ON CONFLICT (follower_id, followed_id) DO NOTHING;
 
 -- name: InsertSubscription :exec
 INSERT INTO user_subscriptions (user_id, subscription)
-VALUES ($1, $2) ON CONFLICT (user_id, subscription) DO NOTHING;
+VALUES ($1, $2) ON CONFLICT (subscription) DO UPDATE SET user_id=$1;
+
+-- name: DeleteSubscription :exec
+DELETE FROM user_subscriptions
+WHERE user_id = $1 AND subscription = $2;
 
 -- name: GetSubscriptions :many
 SELECT subscription

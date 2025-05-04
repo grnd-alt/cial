@@ -17,7 +17,7 @@ docker compose up
 #### start app locally
 start db and keycloak using docker
 ```
-docker compose up -d keycloak db
+docker compose --profile dev up -d keycloak db minio
 ```
 
 run app native for development
