@@ -11,6 +11,25 @@ type FollowService struct {
 	queries *dbgen.Queries
 }
 
+func (f *FollowService) IsFollowing(username string, s string) bool {
+	user, err := f.queries.GetUserByName(context.Background(), username)
+	if err != nil {
+		return false
+	}
+	following, err := f.queries.GetUserByName(context.Background(), s)
+	if err != nil {
+		return false
+	}
+	res, err := f.queries.IsFollowing(context.Background(), dbgen.IsFollowingParams{
+		FollowerID: user.UserID,
+		FollowedID: following.UserID,
+	})
+	if err != nil {
+		return false
+	}
+	return res
+}
+
 func (f *FollowService) GetFollowersCount(username string) (int64, error) {
 	user, err := f.queries.GetUserByName(context.Background(), username)
 	if err != nil {
@@ -75,4 +94,24 @@ func (f *FollowService) Follow(followerName string, followingName string, subscr
 		FollowedID:       following.UserID,
 		NotificationType: pgtype.Text{String: "posts", Valid: true},
 	})
+}
+func (f *FollowService) Unfollow(followerName string, followingName string) error {
+	follower, err := f.queries.GetUserByName(context.Background(), followerName)
+	if err != nil {
+		return err
+	}
+
+	following, err := f.queries.GetUserByName(context.Background(), followingName)
+	if err != nil {
+		return err
+	}
+
+	err = f.queries.DeleteFollower(context.Background(), dbgen.DeleteFollowerParams{
+		FollowerID: follower.UserID,
+		FollowedID: following.UserID,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
