@@ -7,8 +7,6 @@ package dbgen
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createComment = `-- name: CreateComment :one
@@ -58,11 +56,17 @@ func (q *Queries) DeleteCommentsByPost(ctx context.Context, postID string) error
 }
 
 const getCommentsByPost = `-- name: GetCommentsByPost :many
-select id, post_id, user_id, content, created_at, updated_at, user_name from comments where post_id = $1
+select id, post_id, user_id, content, created_at, updated_at, user_name from comments where post_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) GetCommentsByPost(ctx context.Context, postID string) ([]Comment, error) {
-	rows, err := q.db.Query(ctx, getCommentsByPost, postID)
+type GetCommentsByPostParams struct {
+	PostID string
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetCommentsByPost(ctx context.Context, arg GetCommentsByPostParams) ([]Comment, error) {
+	rows, err := q.db.Query(ctx, getCommentsByPost, arg.PostID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -90,36 +94,21 @@ func (q *Queries) GetCommentsByPost(ctx context.Context, postID string) ([]Comme
 }
 
 const getCommentsByPosts = `-- name: GetCommentsByPosts :many
-WITH RankedComments AS (
-    SELECT
-        id, post_id, user_id, content, created_at, updated_at, user_name,
-        ROW_NUMBER() OVER (PARTITION BY post_id ORDER BY created_at DESC) AS rn
-    FROM comments
-    WHERE post_id = ANY($1::varchar[])
-)
-select id, post_id, user_id, content, created_at, updated_at, user_name, rn from RankedComments where rn <= 10
+SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, c.updated_at, c.user_name from unnest($1::varchar[]) as post_ids
+JOIN LATERAL (
+    SELECT id, post_id, user_id, content, created_at, updated_at, user_name FROM comments WHERE post_id = post_ids ORDER BY created_at DESC LIMIT 2
+) c ON true
 `
 
-type GetCommentsByPostsRow struct {
-	ID        string
-	PostID    string
-	UserID    string
-	Content   string
-	CreatedAt pgtype.Timestamp
-	UpdatedAt pgtype.Timestamp
-	UserName  string
-	Rn        int64
-}
-
-func (q *Queries) GetCommentsByPosts(ctx context.Context, dollar_1 []string) ([]GetCommentsByPostsRow, error) {
+func (q *Queries) GetCommentsByPosts(ctx context.Context, dollar_1 []string) ([]Comment, error) {
 	rows, err := q.db.Query(ctx, getCommentsByPosts, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetCommentsByPostsRow
+	var items []Comment
 	for rows.Next() {
-		var i GetCommentsByPostsRow
+		var i Comment
 		if err := rows.Scan(
 			&i.ID,
 			&i.PostID,
@@ -128,7 +117,6 @@ func (q *Queries) GetCommentsByPosts(ctx context.Context, dollar_1 []string) ([]
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.UserName,
-			&i.Rn,
 		); err != nil {
 			return nil, err
 		}

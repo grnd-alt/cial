@@ -76,7 +76,7 @@ func (n *PostsService) DeletePost(postId string) error {
 
 type PostWithComments struct {
 	Post     *dbgen.Post
-	Comments []*dbgen.GetCommentsByPostsRow
+	Comments []*dbgen.Comment
 }
 
 func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments, error) {
@@ -88,13 +88,12 @@ func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments, er
 	if err != nil {
 		return nil, err
 	}
-	commentsMap := make(map[string][]*dbgen.GetCommentsByPostsRow)
+	commentsMap := make(map[string][]*dbgen.Comment)
 	for _, comment := range comments {
 		commentsMap[comment.PostID] = append(commentsMap[comment.PostID], &comment)
 	}
 	postsWithComments := make([]PostWithComments, len(posts))
 
-	var mut sync.Mutex
 	var wg sync.WaitGroup
 	for i, post := range posts {
 		post := post
@@ -106,12 +105,10 @@ func (n *PostsService) populatePosts(posts []dbgen.Post) ([]PostWithComments, er
 				return
 			}
 			post.Filepath = pgtype.Text{String: filepath, Valid: true}
-			mut.Lock()
 			postsWithComments[i] = PostWithComments{
 				Post:     &post,
 				Comments: commentsMap[post.ID],
 			}
-			mut.Unlock()
 		}(post)
 	}
 	wg.Wait()

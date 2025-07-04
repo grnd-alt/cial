@@ -7,17 +7,14 @@ INSERT INTO COMMENTS(
 ) RETURNING *;
 
 -- name: GetCommentsByPost :many
-select * from comments where post_id = $1;
+select * from comments where post_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3 ;
+
 
 -- name: GetCommentsByPosts :many
-WITH RankedComments AS (
-    SELECT
-        *,
-        ROW_NUMBER() OVER (PARTITION BY post_id ORDER BY created_at DESC) AS rn
-    FROM comments
-    WHERE post_id = ANY($1::varchar[])
-)
-select * from RankedComments where rn <= 10;
+SELECT c.* from unnest($1::varchar[]) as post_ids
+JOIN LATERAL (
+    SELECT * FROM comments WHERE post_id = post_ids ORDER BY created_at DESC LIMIT 2
+) c ON true;
 
 -- name: DeleteCommentsByPost :exec
 DELETE FROM COMMENTS WHERE post_id = $1;
