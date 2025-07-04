@@ -4,6 +4,7 @@ import (
 	"backendsetup/m/middleware"
 	"backendsetup/m/services"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,6 +17,25 @@ func InitCommentsController(commentsService *services.CommentsService) *Comments
 	return &CommentsController{
 		CommentsService: commentsService,
 	}
+}
+
+func (c *CommentsController) GetCommentsByPost(ctx *gin.Context) {
+	postID := ctx.Param("postId")
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if postID == "" || err != nil || page < 0 {
+		response := gin.H{"error": "incorrect parameters"}
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+	comments, err := c.CommentsService.GetComments(postID, int32(page))
+	if err != nil {
+		response := gin.H{"error": err.Error()}
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"comments": comments,
+	})
 }
 
 func (c *CommentsController) CreateComment(ctx *gin.Context) {
@@ -41,7 +61,7 @@ func (c *CommentsController) CreateComment(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
-	comment,err := c.CommentsService.CreateComment(claims.Sub, claims.Username, requestBody.Content, requestBody.PostID)
+	comment, err := c.CommentsService.CreateComment(claims.Sub, claims.Username, requestBody.Content, requestBody.PostID)
 	if err != nil {
 		response := gin.H{"error": err.Error()}
 		ctx.JSON(http.StatusInternalServerError, response)

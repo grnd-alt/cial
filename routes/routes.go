@@ -59,7 +59,9 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 		engine.DELETE("/api/posts/:postId", postsController.Delete)
 		engine.GET("/api/posts", postsController.GetLatest)
 		engine.GET("/api/posts/:username", postsController.GetPostsByUser)
+		// comments
 		engine.POST("/api/comments/create", commentsController.CreateComment)
+		engine.GET("/api/comments/:postId", commentsController.GetCommentsByPost)
 
 		// users
 		engine.GET("/api/me", userController.Me)
