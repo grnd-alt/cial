@@ -13,7 +13,7 @@ select * from comments where post_id = $1 ORDER BY created_at DESC LIMIT $2 OFFS
 -- name: GetCommentsByPosts :many
 SELECT c.* from unnest($1::varchar[]) as post_ids
 JOIN LATERAL (
-    SELECT * FROM comments WHERE post_id = post_ids ORDER BY created_at DESC LIMIT 2
+    SELECT * FROM comments WHERE post_id = post_ids ORDER BY created_at DESC LIMIT 3
 ) c ON true;
 
 -- name: DeleteCommentsByPost :exec

@@ -96,7 +96,7 @@ func (q *Queries) GetCommentsByPost(ctx context.Context, arg GetCommentsByPostPa
 const getCommentsByPosts = `-- name: GetCommentsByPosts :many
 SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, c.updated_at, c.user_name from unnest($1::varchar[]) as post_ids
 JOIN LATERAL (
-    SELECT id, post_id, user_id, content, created_at, updated_at, user_name FROM comments WHERE post_id = post_ids ORDER BY created_at DESC LIMIT 2
+    SELECT id, post_id, user_id, content, created_at, updated_at, user_name FROM comments WHERE post_id = post_ids ORDER BY created_at DESC LIMIT 3
 ) c ON true
 `
 
