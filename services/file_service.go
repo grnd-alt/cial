@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/cors"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
@@ -40,6 +41,19 @@ func InitFileService(url string, accessKey string, secretKey string, bucketName 
 			return nil, err
 		}
 	}
+	test := minioClient.SetBucketCors(context.Background(), bucketName, cors.NewConfig([]cors.Rule{
+		{
+			MaxAgeSeconds: 3600,
+			AllowedHeader: []string{"*"},
+			AllowedMethod: []string{"GET"}, // Allow GET requests
+			AllowedOrigin: []string{"*"},   // Allow any origin (use specific one in prod)
+			ExposeHeader:  []string{"ETag", "Content-Type"},
+		},
+	}))
+	if test != nil {
+		fmt.Println("Failed to set bucket CORS:", test)
+	}
+
 	return &FileService{
 		minioClient: minioClient,
 		bucketName:  bucketName,
