@@ -42,7 +42,7 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 	postService := services.InitPostsService(queries, fileService, notificationService)
 	commentsService := services.InitCommentsService(queries)
 
-	userController := controllers.InitUserController(conf, verifier, followService, userService)
+	userController := controllers.InitUserController(conf, verifier, followService, userService, notificationService)
 	postsController := controllers.InitPostsController(conf, postService)
 	commentsController := controllers.InitCommentsController(commentsService)
 	vapidController := controllers.InitVapidController(conf.VAPIDPub)
@@ -72,6 +72,7 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 		engine.POST("/api/users/update-browser-data", userController.UpdateBrowserData)
 		engine.POST("/api/users/follow/:username", userController.Follow)
 		engine.POST("/api/users/unfollow/:username", userController.Unfollow)
+		engine.POST("/api/users/notifyme", userController.NotifyMe)
 	}
 	return engine
 }

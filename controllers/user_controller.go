@@ -14,18 +14,20 @@ import (
 )
 
 type UserController struct {
-	config        *config.Config
-	verifier      *oidc.IDTokenVerifier
-	followService *services.FollowService
-	userService   *services.UserService
+	config              *config.Config
+	verifier            *oidc.IDTokenVerifier
+	followService       *services.FollowService
+	userService         *services.UserService
+	notificationService *services.NotificationService
 }
 
-func InitUserController(config *config.Config, verifier *oidc.IDTokenVerifier, followService *services.FollowService, userService *services.UserService) *UserController {
+func InitUserController(config *config.Config, verifier *oidc.IDTokenVerifier, followService *services.FollowService, userService *services.UserService, notificationService *services.NotificationService) *UserController {
 	return &UserController{
-		config:        config,
-		verifier:      verifier,
-		followService: followService,
-		userService:   userService,
+		config:              config,
+		verifier:            verifier,
+		followService:       followService,
+		userService:         userService,
+		notificationService: notificationService,
 	}
 }
 
@@ -153,7 +155,22 @@ func (u *UserController) UpdateBrowserData(ctx *gin.Context) {
 	return
 }
 
-func (u UserController) Me(ctx *gin.Context) {
+func (u *UserController) NotifyMe(ctx *gin.Context) {
+	claims, exists := ctx.Get("claims")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
+		return
+	}
+	userId := claims.(middleware.Claims).Sub
+	err := u.notificationService.SendNotification("You have a new notification", userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "Notification sent"})
+}
+
+func (u *UserController) Me(ctx *gin.Context) {
 	claims, exists := ctx.Get("claims")
 	if !exists {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
