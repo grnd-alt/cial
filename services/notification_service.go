@@ -42,10 +42,11 @@ func (n *NotificationService) SendNotification(message string, userId string) er
 			VAPIDPrivateKey: n.vapidPriv,
 			TTL:             30,
 		})
-		if resp.StatusCode != 201 || err != nil {
+		if err != nil || resp.StatusCode != 201 {
 			if err := n.queries.DeleteSubscription(context.Background(), dbgen.DeleteSubscriptionParams{UserID: userId, Subscription: subscription}); err != nil {
 				return err
 			}
+			return err
 		}
 		fmt.Println(resp)
 	}
