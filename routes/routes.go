@@ -6,6 +6,7 @@ import (
 	"backendsetup/m/db/sql/dbgen"
 	"backendsetup/m/middleware"
 	"backendsetup/m/services"
+	"backendsetup/m/workers"
 	"fmt"
 	"time"
 
@@ -24,13 +25,13 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 	corsConf.AllowCredentials = true
 	corsConf.AllowAllOrigins = true
 
-	fileUrlCache := services.InitInMemoryUrlCache()
-	fileService, err := services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName, fileUrlCache, conf.AppEnv)
+	fileURLCache := services.InitInMemoryUrlCache()
+	fileService, err := services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName, fileURLCache, conf.AppEnv)
 	for {
 		if err != nil {
 			fmt.Printf("s3 init failed %v\n", err)
 			time.Sleep(5 * time.Second)
-			fileService, err = services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName, fileUrlCache, conf.AppEnv)
+			fileService, err = services.InitFileService(conf.S3URL, conf.S3AccessKey, conf.S3SecretKey, conf.S3BucketName, fileURLCache, conf.AppEnv)
 			continue
 		}
 		break
@@ -41,6 +42,9 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 	userService := services.InitUserService(queries)
 	postService := services.InitPostsService(queries, fileService, notificationService)
 	commentsService := services.InitCommentsService(queries)
+
+	notificationWorker := workers.NewReminderNotificationWorker(queries,notificationService)
+	go notificationWorker.StartWorker()
 
 	userController := controllers.InitUserController(conf, verifier, followService, userService, notificationService)
 	postsController := controllers.InitPostsController(conf, postService)
@@ -53,7 +57,7 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 	engine.GET("/api/hello", controllers.HelloWorldHandler)
 	engine.GET("/api/vapid", vapidController.GetPublicKey)
 
-	engine.Use(middleware.ProtectedMiddleware(verifier, conf.AppEnv))
+	engine.Use(middleware.ProtectedMiddleware(verifier, conf.AppEnv, queries))
 	{
 
 		// posts

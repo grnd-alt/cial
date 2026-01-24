@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"log"
 
 	"backendsetup/m/config"
 	"backendsetup/m/db/sql/dbgen"
@@ -49,6 +49,10 @@ func (n *NotificationService) SendNotification(data NotificationData, userId str
 	if err != nil {
 		return err
 	}
+	err = n.queries.SetLastNotified(context.Background(), userId)
+	if err != nil {
+		return err
+	}
 
 	payload, err := json.Marshal(data)
 	if err != nil {
@@ -68,12 +72,12 @@ func (n *NotificationService) SendNotification(data NotificationData, userId str
 			TTL:             30,
 		})
 		if err != nil || resp.StatusCode != 201 {
+			log.Printf("sending notification failed to %s with code %s: %v", userId, resp.StatusCode, err)
 			if err := n.queries.DeleteSubscription(context.Background(), dbgen.DeleteSubscriptionParams{UserID: userId, Subscription: subscription}); err != nil {
 				return err
 			}
 			return err
 		}
-		fmt.Println(resp)
 	}
 	return err
 }
