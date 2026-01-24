@@ -1,14 +1,34 @@
 package services
 
 import (
-	"backendsetup/m/config"
-	"backendsetup/m/db/sql/dbgen"
 	"context"
 	"encoding/json"
 	"fmt"
 
+	"backendsetup/m/config"
+	"backendsetup/m/db/sql/dbgen"
+
 	"github.com/SherClockHolmes/webpush-go"
 )
+
+type NotificationType string
+
+const (
+	ReminderNotificationType  NotificationType = "reminder"
+	NewPostNotificationType   NotificationType = "newPost"
+	NewFollowNotificationType NotificationType = "newFollow"
+)
+
+type NotificationData struct {
+	Type  NotificationType `json:"type"`
+	Title string           `json:"title"`
+	Body  string           `json:"body"`
+	Data  any              `json:"data,omitempty"`
+}
+
+type NewPostData struct {
+	Author string `json:"author"`
+}
 
 type NotificationService struct {
 	queries   *dbgen.Queries
@@ -24,19 +44,24 @@ func InitNotificationServe(conf *config.Config, queries *dbgen.Queries) *Notific
 	}
 }
 
-func (n *NotificationService) SendNotification(message string, userId string) error {
-
+func (n *NotificationService) SendNotification(data NotificationData, userId string) error {
 	subscriptions, err := n.queries.GetSubscriptions(context.Background(), userId)
 	if err != nil {
 		return err
 	}
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
 	for _, subscription := range subscriptions {
 		s := &webpush.Subscription{}
 		if err := json.Unmarshal([]byte(subscription), s); err != nil {
 			return err
 		}
 
-		resp, err := webpush.SendNotification([]byte(message), s, &webpush.Options{
+		resp, err := webpush.SendNotification(payload, s, &webpush.Options{
 			Subscriber:      "test@belakkaf.net",
 			VAPIDPublicKey:  n.vapidPub,
 			VAPIDPrivateKey: n.vapidPriv,
@@ -53,13 +78,13 @@ func (n *NotificationService) SendNotification(message string, userId string) er
 	return err
 }
 
-func (n *NotificationService) SendFollowersNotification(message string, userId string) error {
+func (n *NotificationService) SendFollowersNotification(data NotificationData, userId string) error {
 	res, err := n.queries.GetAllFollowers(context.Background(), userId)
 	if err != nil {
 		return err
 	}
 	for _, follower := range res {
-		if err := n.SendNotification(message, follower.FollowerID); err != nil {
+		if err := n.SendNotification(data, follower.FollowerID); err != nil {
 			return err
 		}
 	}

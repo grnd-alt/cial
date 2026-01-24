@@ -1,11 +1,12 @@
 package services
 
 import (
-	"backendsetup/m/db/sql/dbgen"
 	"context"
 	"fmt"
 	"mime/multipart"
 	"sync"
+
+	"backendsetup/m/db/sql/dbgen"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -62,7 +63,15 @@ func (n *PostsService) CreatePost(username string, createdBy string, content str
 	if err != nil {
 		return nil, err
 	}
-	go n.notificationService.SendFollowersNotification(fmt.Sprintf("New Post by %s ", username), createdBy)
+	data := NotificationData{
+		Type:  NewPostNotificationType,
+		Title: "There's a new post!",
+		Body:  fmt.Sprintf("%s just posted", username),
+		Data: NewPostData{
+			Author: username,
+		},
+	}
+	go n.notificationService.SendFollowersNotification(data, createdBy)
 	return &posts[0], err
 }
 

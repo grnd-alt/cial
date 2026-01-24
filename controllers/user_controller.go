@@ -162,7 +162,12 @@ func (u *UserController) NotifyMe(ctx *gin.Context) {
 		return
 	}
 	userId := claims.(middleware.Claims).Sub
-	err := u.notificationService.SendNotification("You have a new notification", userId)
+	data := services.NotificationData{
+		Type: services.ReminderNotificationType,
+		Title: "Notifications are working",
+		Body: "This is what they will look like in the future",
+	}
+	err := u.notificationService.SendNotification(data, userId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
