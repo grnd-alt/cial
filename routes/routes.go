@@ -42,6 +42,7 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 	userService := services.InitUserService(queries)
 	postService := services.InitPostsService(queries, fileService, notificationService)
 	commentsService := services.InitCommentsService(queries)
+	countersService := services.InitCountersService(queries)
 
 	notificationWorker := workers.NewReminderNotificationWorker(queries,notificationService)
 	go notificationWorker.StartWorker()
@@ -50,6 +51,7 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 	postsController := controllers.InitPostsController(conf, postService)
 	commentsController := controllers.InitCommentsController(commentsService)
 	vapidController := controllers.InitVapidController(conf.VAPIDPub)
+	countersController := controllers.InitCountersController(countersService)
 
 	engine.Use(cors.New(corsConf))
 	engine.Use(gin.Logger())
@@ -77,6 +79,14 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 		engine.POST("/api/users/follow/:username", userController.Follow)
 		engine.POST("/api/users/unfollow/:username", userController.Unfollow)
 		engine.POST("/api/users/notifyme", userController.NotifyMe)
+
+		// counters
+		engine.POST("api/counters", countersController.CreateCounter)
+		engine.POST("api/counters/:counterID/events/add", countersController.AddEvent)
+		engine.GET("api/counters/:counterID/events", countersController.GetEvents)
+		engine.GET("api/counters", countersController.GetCounters)
+		engine.GET("api/counters/:counterID", countersController.GetCounter)
+		engine.POST("api/counters/share", countersController.ShareCounter)
 	}
 	return engine
 }

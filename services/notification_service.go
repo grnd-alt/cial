@@ -44,12 +44,12 @@ func InitNotificationServe(conf *config.Config, queries *dbgen.Queries) *Notific
 	}
 }
 
-func (n *NotificationService) SendNotification(data NotificationData, userId string) error {
-	subscriptions, err := n.queries.GetSubscriptions(context.Background(), userId)
+func (n *NotificationService) SendNotification(data NotificationData, userID string) error {
+	subscriptions, err := n.queries.GetSubscriptions(context.Background(), userID)
 	if err != nil {
 		return err
 	}
-	err = n.queries.SetLastNotified(context.Background(), userId)
+	err = n.queries.SetLastNotified(context.Background(), userID)
 	if err != nil {
 		return err
 	}
@@ -72,8 +72,8 @@ func (n *NotificationService) SendNotification(data NotificationData, userId str
 			TTL:             30,
 		})
 		if err != nil || resp.StatusCode != 201 {
-			log.Printf("sending notification failed to %s with code %s: %v", userId, resp.StatusCode, err)
-			if err := n.queries.DeleteSubscription(context.Background(), dbgen.DeleteSubscriptionParams{UserID: userId, Subscription: subscription}); err != nil {
+			log.Printf("sending notification failed to %s with code %d %v", userID, resp.StatusCode, err)
+			if err := n.queries.DeleteSubscription(context.Background(), dbgen.DeleteSubscriptionParams{UserID: userID, Subscription: subscription}); err != nil {
 				return err
 			}
 			return err
@@ -82,8 +82,8 @@ func (n *NotificationService) SendNotification(data NotificationData, userId str
 	return err
 }
 
-func (n *NotificationService) SendFollowersNotification(data NotificationData, userId string) error {
-	res, err := n.queries.GetAllFollowers(context.Background(), userId)
+func (n *NotificationService) SendFollowersNotification(data NotificationData, userID string) error {
+	res, err := n.queries.GetAllFollowers(context.Background(), userID)
 	if err != nil {
 		return err
 	}
