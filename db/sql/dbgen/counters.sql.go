@@ -116,18 +116,28 @@ const getCountersForUser = `-- name: GetCountersForUser :many
 SELECT DISTINCT
   counters.id, counters.name, counters.icon,
   counters_users.access_type,
-  counters_users.entry_count
-FROM counters,counters_users
-WHERE counters_users.counter_id = counters.id
- AND counters_users.user_id = $1
+  counters_users.entry_count,
+  CASE WHEN latest_event.id IS NOT NULL THEN latest_event.id END as event_id,
+  CASE WHEN latest_event.created_at IS NOT NULL THEN latest_event.created_at END as event_created_at
+FROM counters
+JOIN counters_users ON counters_users.counter_id = counters.id
+LEFT JOIN (
+  SELECT DISTINCT ON (counter_id) id, counter_id, user_id, created_at
+  FROM counters_users_events
+  WHERE counters_users_events.user_id = $1
+  ORDER BY counter_id, id DESC
+) latest_event ON latest_event.counter_id = counters.id
+WHERE counters_users.user_id = $1
 `
 
 type GetCountersForUserRow struct {
-	ID         int32
-	Name       pgtype.Text
-	Icon       pgtype.Text
-	AccessType pgtype.Text
-	EntryCount pgtype.Int4
+	ID             int32
+	Name           pgtype.Text
+	Icon           pgtype.Text
+	AccessType     pgtype.Text
+	EntryCount     pgtype.Int4
+	EventID        interface{}
+	EventCreatedAt interface{}
 }
 
 func (q *Queries) GetCountersForUser(ctx context.Context, userID string) ([]GetCountersForUserRow, error) {
@@ -145,6 +155,8 @@ func (q *Queries) GetCountersForUser(ctx context.Context, userID string) ([]GetC
 			&i.Icon,
 			&i.AccessType,
 			&i.EntryCount,
+			&i.EventID,
+			&i.EventCreatedAt,
 		); err != nil {
 			return nil, err
 		}
