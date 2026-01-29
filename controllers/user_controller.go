@@ -152,7 +152,6 @@ func (u *UserController) UpdateBrowserData(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Subscription added"})
-	return
 }
 
 func (u *UserController) NotifyMe(ctx *gin.Context) {
@@ -161,13 +160,13 @@ func (u *UserController) NotifyMe(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
 		return
 	}
-	userId := claims.(middleware.Claims).Sub
+	userID := claims.(middleware.Claims).Sub
 	data := services.NotificationData{
 		Type: services.ReminderNotificationType,
 		Title: "Notifications are working",
 		Body: "This is what they will look like in the future",
 	}
-	err := u.notificationService.SendNotification(data, userId)
+	err := u.notificationService.SendNotification(data, userID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -183,4 +182,30 @@ func (u *UserController) Me(ctx *gin.Context) {
 	}
 	u.userService.CreateUserIfNotExists(claims.(middleware.Claims).Username, claims.(middleware.Claims).Sub)
 	ctx.JSON(http.StatusOK, claims)
+}
+
+func (u *UserController) FindUser(ctx *gin.Context) {
+	_, exists := ctx.Get("claims")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
+		return
+	}
+	type findBody struct {
+		Query string `json:"query"`
+	}
+
+	var body findBody
+	err := ctx.BindJSON(&body)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+
+	}
+	users, err := u.userService.FindUser(body.Query)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+
+	}
+	ctx.JSON(http.StatusOK, users)
 }

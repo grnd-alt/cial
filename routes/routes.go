@@ -71,6 +71,7 @@ func Init(verifier *oidc.IDTokenVerifier, conf *config.Config, queries *dbgen.Qu
 
 		// users
 		engine.GET("/api/me", userController.Me)
+		engine.GET("/api/user/find", userController.FindUser)
 		engine.GET("/api/users/:username", userController.GetUser)
 		engine.GET("/api/users/:username/followers", userController.GetFollowers)
 		engine.POST("/api/users/update-browser-data", userController.UpdateBrowserData)
