@@ -12,25 +12,24 @@ import (
 )
 
 const findUser = `-- name: FindUser :many
-SELECT id, user_id, username, last_login, last_notified FROM users WHERE username LIKE '%' || $1 || '%' LIMIT 10
+SELECT users.user_id, users.username FROM users WHERE username LIKE '%' || $1 || '%' LIMIT 10
 `
 
-func (q *Queries) FindUser(ctx context.Context, dollar_1 pgtype.Text) ([]User, error) {
+type FindUserRow struct {
+	UserID   string
+	Username string
+}
+
+func (q *Queries) FindUser(ctx context.Context, dollar_1 pgtype.Text) ([]FindUserRow, error) {
 	rows, err := q.db.Query(ctx, findUser, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []FindUserRow
 	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.Username,
-			&i.LastLogin,
-			&i.LastNotified,
-		); err != nil {
+		var i FindUserRow
+		if err := rows.Scan(&i.UserID, &i.Username); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

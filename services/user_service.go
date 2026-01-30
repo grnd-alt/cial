@@ -1,8 +1,9 @@
 package services
 
 import (
-	"backendsetup/m/db/sql/dbgen"
 	"context"
+
+	"backendsetup/m/db/sql/dbgen"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -29,7 +30,6 @@ func (u *UserService) InsertSubscription(userId string, subscription []byte) err
 	return u.queries.InsertSubscription(context.Background(), dbgen.InsertSubscriptionParams{UserID: userId, Subscription: subscription})
 }
 
-
-func (u *UserService) FindUser(query string) ([]dbgen.User, error) {
+func (u *UserService) FindUser(query string) ([]dbgen.FindUserRow, error) {
 	return u.queries.FindUser(context.Background(), pgtype.Text{Valid: true, String: query})
 }

@@ -49,6 +49,27 @@ func (c *CountersService) CanShare(counterID int, userID string) bool {
 	return false
 }
 
+func (c *CountersService) GetCountersForUserFrom(userID string, requestedFrom string) ([]dbgen.GetCountersForUserRow, error) {
+	counts, err := c.queries.GetCountersForUser(context.Background(), userID)
+	if err != nil {
+		return nil, err
+	}
+	filtered := make([]dbgen.GetCountersForUserRow, 0)
+	for _, count := range counts {
+		users, err := c.queries.GetUsersInCounter(context.Background(), count.ID)
+		if err != nil {
+			continue
+		}
+		for _, user := range users {
+			if user.UserID.Valid && user.UserID.String == requestedFrom {
+				filtered = append(filtered, count)
+				continue
+			}
+		}
+	}
+	return filtered, nil
+}
+
 func (c *CountersService) GetCountersForUser(userID string) ([]dbgen.GetCountersForUserRow, error) {
 	counts, err := c.queries.GetCountersForUser(context.Background(), userID)
 	if err != nil {
@@ -88,7 +109,6 @@ func (c *CountersService) CreateCounter(name string, icon string, creator string
 	}
 	return &counter, nil
 }
-
 
 func (c *CountersService) ShareCounter(receivingUserID string, counterID int, accessType string, sharee string) error {
 	if receivingUserID == sharee {

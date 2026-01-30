@@ -31,7 +31,7 @@ WHERE counters_users.user_id = $1;
 SELECT DISTINCT * FROM counters_users where user_id = $1 and counter_id = $2;
 
 -- name: GetUsersInCounter :many
-SELECT DISTINCT counters_users.access_type, counters_users.entry_count, users.username from counters_users LEFT JOIN users on counters_users.user_id = users.user_id
+SELECT DISTINCT counters_users.access_type, counters_users.entry_count, users.username, users.user_id from counters_users LEFT JOIN users on counters_users.user_id = users.user_id
 where counters_users.counter_id = $1;
 
 -- name: GetCounter :one

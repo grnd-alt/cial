@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"backendsetup/m/config"
-	"backendsetup/m/middleware"
-	"backendsetup/m/services"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
+
+	"backendsetup/m/config"
+	"backendsetup/m/middleware"
+	"backendsetup/m/services"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
@@ -94,11 +95,11 @@ func (u UserController) GetUser(ctx *gin.Context) {
 		return
 	}
 	type userdata = struct {
-		FollowingCount int64 `json:"followingcount"`
-		Followers      int64 `json:"followers"`
-		IsFollowing    bool  `json:"isfollowing"`
-
-		Username string `json:"username"`
+		FollowingCount int64  `json:"followingcount"`
+		Followers      int64  `json:"followers"`
+		IsFollowing    bool   `json:"isfollowing"`
+		UserID         string `json:"userID"`
+		Username       string `json:"username"`
 	}
 	username := ctx.Param("username")
 	followingCount, err := u.followService.GetFollowingCount(username)
@@ -162,9 +163,9 @@ func (u *UserController) NotifyMe(ctx *gin.Context) {
 	}
 	userID := claims.(middleware.Claims).Sub
 	data := services.NotificationData{
-		Type: services.ReminderNotificationType,
+		Type:  services.ReminderNotificationType,
 		Title: "Notifications are working",
-		Body: "This is what they will look like in the future",
+		Body:  "This is what they will look like in the future",
 	}
 	err := u.notificationService.SendNotification(data, userID)
 	if err != nil {
@@ -190,18 +191,8 @@ func (u *UserController) FindUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
 		return
 	}
-	type findBody struct {
-		Query string `json:"query"`
-	}
-
-	var body findBody
-	err := ctx.BindJSON(&body)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-
-	}
-	users, err := u.userService.FindUser(body.Query)
+	query := ctx.Query("query")
+	users, err := u.userService.FindUser(query)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return

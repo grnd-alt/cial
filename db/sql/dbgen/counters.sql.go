@@ -226,7 +226,7 @@ func (q *Queries) GetUserInCounter(ctx context.Context, arg GetUserInCounterPara
 }
 
 const getUsersInCounter = `-- name: GetUsersInCounter :many
-SELECT DISTINCT counters_users.access_type, counters_users.entry_count, users.username from counters_users LEFT JOIN users on counters_users.user_id = users.user_id
+SELECT DISTINCT counters_users.access_type, counters_users.entry_count, users.username, users.user_id from counters_users LEFT JOIN users on counters_users.user_id = users.user_id
 where counters_users.counter_id = $1
 `
 
@@ -234,6 +234,7 @@ type GetUsersInCounterRow struct {
 	AccessType pgtype.Text
 	EntryCount pgtype.Int4
 	Username   pgtype.Text
+	UserID     pgtype.Text
 }
 
 func (q *Queries) GetUsersInCounter(ctx context.Context, counterID int32) ([]GetUsersInCounterRow, error) {
@@ -245,7 +246,12 @@ func (q *Queries) GetUsersInCounter(ctx context.Context, counterID int32) ([]Get
 	var items []GetUsersInCounterRow
 	for rows.Next() {
 		var i GetUsersInCounterRow
-		if err := rows.Scan(&i.AccessType, &i.EntryCount, &i.Username); err != nil {
+		if err := rows.Scan(
+			&i.AccessType,
+			&i.EntryCount,
+			&i.Username,
+			&i.UserID,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
