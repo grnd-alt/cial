@@ -15,3 +15,6 @@ SELECT * FROM users WHERE last_login < $1 limit $2;
 
 -- name: SetLastNotified :exec
 UPDATE users SET last_notified = now() WHERE user_id = $1;
+
+-- name: FindUser :many
+SELECT users.user_id, users.username FROM users WHERE username LIKE '%' || $1 || '%' LIMIT 10;

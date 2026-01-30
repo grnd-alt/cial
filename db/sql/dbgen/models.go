@@ -18,6 +18,28 @@ type Comment struct {
 	UserName  string
 }
 
+type Counter struct {
+	ID   int32
+	Name pgtype.Text
+	Icon pgtype.Text
+}
+
+type CountersUser struct {
+	ID         int32
+	UserID     string
+	CounterID  int32
+	Token      pgtype.Text
+	AccessType pgtype.Text
+	EntryCount pgtype.Int4
+}
+
+type CountersUsersEvent struct {
+	ID        int32
+	UserID    string
+	CounterID int32
+	CreatedAt pgtype.Timestamptz
+}
+
 type Post struct {
 	ID        string
 	CreatedBy string

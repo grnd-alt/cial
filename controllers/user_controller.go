@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"backendsetup/m/config"
-	"backendsetup/m/middleware"
-	"backendsetup/m/services"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
+
+	"backendsetup/m/config"
+	"backendsetup/m/middleware"
+	"backendsetup/m/services"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
@@ -94,11 +95,11 @@ func (u UserController) GetUser(ctx *gin.Context) {
 		return
 	}
 	type userdata = struct {
-		FollowingCount int64 `json:"followingcount"`
-		Followers      int64 `json:"followers"`
-		IsFollowing    bool  `json:"isfollowing"`
-
-		Username string `json:"username"`
+		FollowingCount int64  `json:"followingcount"`
+		Followers      int64  `json:"followers"`
+		IsFollowing    bool   `json:"isfollowing"`
+		UserID         string `json:"userID"`
+		Username       string `json:"username"`
 	}
 	username := ctx.Param("username")
 	followingCount, err := u.followService.GetFollowingCount(username)
@@ -152,7 +153,6 @@ func (u *UserController) UpdateBrowserData(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Subscription added"})
-	return
 }
 
 func (u *UserController) NotifyMe(ctx *gin.Context) {
@@ -161,13 +161,13 @@ func (u *UserController) NotifyMe(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
 		return
 	}
-	userId := claims.(middleware.Claims).Sub
+	userID := claims.(middleware.Claims).Sub
 	data := services.NotificationData{
-		Type: services.ReminderNotificationType,
+		Type:  services.ReminderNotificationType,
 		Title: "Notifications are working",
-		Body: "This is what they will look like in the future",
+		Body:  "This is what they will look like in the future",
 	}
-	err := u.notificationService.SendNotification(data, userId)
+	err := u.notificationService.SendNotification(data, userID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -183,4 +183,20 @@ func (u *UserController) Me(ctx *gin.Context) {
 	}
 	u.userService.CreateUserIfNotExists(claims.(middleware.Claims).Username, claims.(middleware.Claims).Sub)
 	ctx.JSON(http.StatusOK, claims)
+}
+
+func (u *UserController) FindUser(ctx *gin.Context) {
+	_, exists := ctx.Get("claims")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found"})
+		return
+	}
+	query := ctx.Query("query")
+	users, err := u.userService.FindUser(query)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+
+	}
+	ctx.JSON(http.StatusOK, users)
 }

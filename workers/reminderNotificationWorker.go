@@ -27,7 +27,7 @@ func NewReminderNotificationWorker(queries *dbgen.Queries, notificationService *
 func (r ReminderNotificationWorker) SendNotifications() {
 	users, err := r.queries.GetNoLoggedInSince(context.Background(), dbgen.GetNoLoggedInSinceParams{
 		LastLogin: pgtype.Timestamptz{Valid: true, Time: time.Now().Add(-48 * time.Hour)},
-		Limit: 1000,
+		Limit:     1000,
 	})
 	if err != nil {
 		log.Printf("failed to receive Users to notify %v", err)

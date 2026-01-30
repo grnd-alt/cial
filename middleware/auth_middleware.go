@@ -43,6 +43,7 @@ func ProtectedMiddleware(verifier *oidc.IDTokenVerifier, mode string, queries *d
 		bearer, err := getBearer(ctx.GetHeader("Authorization"))
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			ctx.Abort()
 			return
 		}
 		token, err := verifier.Verify(ctx, bearer)

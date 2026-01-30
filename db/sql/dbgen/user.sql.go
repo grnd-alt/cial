@@ -11,6 +11,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const findUser = `-- name: FindUser :many
+SELECT users.user_id, users.username FROM users WHERE username LIKE '%' || $1 || '%' LIMIT 10
+`
+
+type FindUserRow struct {
+	UserID   string
+	Username string
+}
+
+func (q *Queries) FindUser(ctx context.Context, dollar_1 pgtype.Text) ([]FindUserRow, error) {
+	rows, err := q.db.Query(ctx, findUser, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindUserRow
+	for rows.Next() {
+		var i FindUserRow
+		if err := rows.Scan(&i.UserID, &i.Username); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getNoLoggedInSince = `-- name: GetNoLoggedInSince :many
 SELECT id, user_id, username, last_login, last_notified FROM users WHERE last_login < $1 limit $2
 `
